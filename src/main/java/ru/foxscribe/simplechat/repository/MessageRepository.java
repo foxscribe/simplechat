@@ -10,6 +10,8 @@ import java.util.List;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
-    @Query("SELECT m FROM Message m WHERE m.room.id = :roomId AND m.time >= :since")
-    List<Message> retrieve(@Param("roomId") Long roomId, @Param("since") Long time);
+    @Query("SELECT m FROM Message m WHERE m.room.id = :roomId AND m.time >= "
+            + ":since")
+    List<Message> retrieve(@Param("roomId") Long roomId,
+                           @Param("since") Long time);
 }

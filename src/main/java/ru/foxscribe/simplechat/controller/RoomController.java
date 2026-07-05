@@ -1,16 +1,17 @@
 package ru.foxscribe.simplechat.controller;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import ru.foxscribe.simplechat.dto.CreateRoomRequestDto;
 import ru.foxscribe.simplechat.dto.CreateRoomResponseDto;
 import ru.foxscribe.simplechat.dto.UserDto;
-import ru.foxscribe.simplechat.model.Room;
-import ru.foxscribe.simplechat.repository.RoomRepository;
-import ru.foxscribe.simplechat.repository.UserRepository;
+import ru.foxscribe.simplechat.service.RoomService;
 import ru.foxscribe.simplechat.util.CustomUserDetails;
 
 import java.util.List;
@@ -19,47 +20,25 @@ import java.util.List;
 @AllArgsConstructor
 @RequestMapping("/api/rooms")
 public class RoomController {
-    private final UserRepository users;
-    private final RoomRepository rooms;
+    private final RoomService roomService;
 
-    @Transactional
     @GetMapping("/get")
-    public @ResponseBody List<UserDto> getUsers(
+    public List<UserDto> getUsers(
             @RequestParam("roomid") Long roomId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        var user = users.findById(userDetails.getId()).orElseThrow();
-        var room = rooms.findById(roomId).orElseThrow();
-        if (!user.getRooms().contains(room))
-            return List.of();
-
-        return room
-                .getUsers()
-                .parallelStream()
-                .map(u -> new UserDto(
-                        u.getId(),
-                        u.getUsername()))
-                .toList();
+        return roomService.getUsers(roomId, userDetails.getId());
     }
 
-    @Transactional
     @GetMapping("/join")
     public void join(
             @RequestParam("roomid") Long roomId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        var user = users.findById(userDetails.getId()).orElseThrow();
-        var room = rooms.findById(roomId).orElseThrow();
-
-        room.addUser(user);
-        rooms.save(room);
+        roomService.join(roomId, userDetails.getId());
     }
 
-    @Transactional
     @PostMapping("/create")
-    public @ResponseBody CreateRoomResponseDto create(
+    public CreateRoomResponseDto create(
             @RequestBody CreateRoomRequestDto request) {
-        var room = new Room();
-        room.setName(request.getName());
-        rooms.save(room);
-        return new CreateRoomResponseDto(room.getId());
+        return roomService.create(request.getName());
     }
 }
