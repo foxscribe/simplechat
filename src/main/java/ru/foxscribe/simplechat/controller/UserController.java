@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import ru.foxscribe.simplechat.dto.RoomDto;
+import ru.foxscribe.simplechat.dto.UserDto;
 import ru.foxscribe.simplechat.repository.UserRepository;
 import ru.foxscribe.simplechat.util.CustomUserDetails;
 
@@ -33,5 +34,12 @@ public class UserController {
                     r.getName()
                 ))
                 .collect(Collectors.toSet());
+    }
+
+    @GetMapping("/me")
+    public @ResponseBody UserDto me(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        var user = users.findById(userDetails.getId()).orElseThrow();
+        return new UserDto(user.getId(), user.getUsername());
     }
 }
