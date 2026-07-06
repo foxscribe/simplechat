@@ -57,8 +57,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.FORBIDDEN, "You have insufficient permissions.",
-                request);
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
     /**
@@ -68,8 +67,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(
             NoSuchElementException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.NOT_FOUND, "The requested resource was not found.",
-                request);
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
     /**
@@ -79,7 +77,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(
             BadCredentialsException ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid username or password.", request);
+        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 
     /**
@@ -106,8 +104,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleGeneral(
             Exception ex, HttpServletRequest request) {
         log.error("An unexpected error occurred", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.",
-                request);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred.", request);
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(
