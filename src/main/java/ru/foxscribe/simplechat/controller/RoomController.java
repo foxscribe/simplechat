@@ -1,5 +1,8 @@
 package ru.foxscribe.simplechat.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,24 +22,41 @@ import java.util.List;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/rooms")
+@Tag(name = "Chat rooms", description = "Endpoints for interacting with chat rooms")
 public class RoomController {
     private final RoomService roomService;
 
     @GetMapping("/get")
+    @Operation(
+            summary = "Get members of the selected room",
+            description = "Returns a list of users in the selected chat room."
+    )
     public List<UserDto> getUsers(
-            @RequestParam("roomid") Long roomId,
+            @Parameter(description = "ID of the chat room", required = true)
+            @RequestParam("roomid")
+            Long roomId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return roomService.getUsers(roomId, userDetails.getId());
     }
 
     @GetMapping("/join")
+    @Operation(
+            summary = "Join a chat room",
+            description = "Adds user into a chat room."
+    )
     public void join(
-            @RequestParam("roomid") Long roomId,
+            @Parameter(description = "ID of the chat room", required = true)
+            @RequestParam("roomid")
+            Long roomId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         roomService.join(roomId, userDetails.getId());
     }
 
     @PostMapping("/create")
+    @Operation(
+            summary = "Create a chat room",
+            description = "Creates an empty chat room. Doesn't add user to it automatically."
+    )
     public CreateRoomResponseDto create(
             @RequestBody CreateRoomRequestDto request) {
         return roomService.create(request.getName());

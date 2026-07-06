@@ -1,12 +1,16 @@
 package ru.foxscribe.simplechat.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.foxscribe.simplechat.dto.MessageDto;
+import ru.foxscribe.simplechat.model.Message;
 import ru.foxscribe.simplechat.repository.MessageRepository;
 import ru.foxscribe.simplechat.repository.RoomRepository;
 import ru.foxscribe.simplechat.repository.UserRepository;
+import ru.foxscribe.simplechat.util.exceptions.AccessDeniedException;
 
 import java.time.Instant;
 import java.util.List;
@@ -24,7 +28,7 @@ public class MessageService {
         var room = rooms.findById(roomId).orElseThrow();
 
         if (!user.getRooms().contains(room)) {
-            return List.of();
+            throw new AccessDeniedException("You are not a member of this room");
         }
 
         var messageList = messages.retrieve(roomId, time);
@@ -40,11 +44,39 @@ public class MessageService {
 
     @Transactional
     public void create(Long roomId, String text, Long userId) {
-        var message = new ru.foxscribe.simplechat.model.Message();
+        var room = rooms.findById(roomId).orElseThrow();
+        var user = users.findById(userId).orElseThrow();
+
+        if (!user.getRooms().contains(room)) {
+            throw new AccessDeniedException("You are not a member of this room");
+        }
+
+        var message = new Message();
         message.setRoom(rooms.findById(roomId).orElseThrow());
         message.setText(text);
         message.setTime(Instant.now().getEpochSecond());
         message.setSender(users.findById(userId).orElseThrow());
         messages.save(message);
+    }
+
+    public List<MessageDto> getMessagesPage(Long roomId, int size, int page, Long userId) {
+        var room = rooms.findById(roomId).orElseThrow();
+        var user = users.findById(userId).orElseThrow();
+
+        if (!user.getRooms().contains(room)) {
+            throw new AccessDeniedException("You are not a member of this room");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        List<Message> messages = this.messages.retrieveMessagesPaginated(roomId, pageable);
+
+        return messages.stream()
+                .map(m -> new MessageDto(
+                        m.getId(),
+                        m.getSender().getId(),
+                        m.getSender().getUsername(),
+                        m.getText(),
+                        m.getTime()))
+                .toList();
     }
 }

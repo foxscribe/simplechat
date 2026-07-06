@@ -1,5 +1,8 @@
 package ru.foxscribe.simplechat.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +20,17 @@ import ru.foxscribe.simplechat.util.CustomUserDetails;
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/auth")
+@Tag(
+        name = "Authentication",
+        description = "Endpoints for registration, login, and session management"
+)
 public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
+    @Operation(summary = "Register a new user")
+    @ApiResponse(responseCode = "200", description = "User registered successfully")
+    @ApiResponse(responseCode = "409", description = "Username already taken")
     public ResponseEntity<String> register(
             @RequestBody RegisterRequest request) {
         authService.register(request);
@@ -28,6 +38,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(
+            summary = "Login user and create a session.",
+            description = "The JSESSIONID cookie will be set in the response."
+    )
     public ResponseEntity<String> login(@RequestBody LoginRequest request,
                                         HttpServletRequest httpRequest) {
         authService.login(request, httpRequest);
@@ -35,6 +49,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "Check session validity")
     public ResponseEntity<String> me(
             @AuthenticationPrincipal CustomUserDetails user) {
         return ResponseEntity.ok("");
