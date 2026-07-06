@@ -8,6 +8,7 @@ import ru.foxscribe.simplechat.dto.UserDto;
 import ru.foxscribe.simplechat.model.Room;
 import ru.foxscribe.simplechat.repository.RoomRepository;
 import ru.foxscribe.simplechat.repository.UserRepository;
+import ru.foxscribe.simplechat.util.exceptions.AccessDeniedException;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class RoomService {
         var room = rooms.findById(roomId).orElseThrow();
 
         if (!user.getRooms().contains(room)) {
-            return List.of();
+            throw new AccessDeniedException("You are not a member of this room");
         }
 
         return room.getUsers().stream()
