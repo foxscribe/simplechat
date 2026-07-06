@@ -2,8 +2,10 @@ package ru.foxscribe.simplechat.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +34,10 @@ public class MessageController {
             summary = "Get messages in a chat room",
             description = "Returns a list of messages since a given time in the selected chat room."
     )
+    @ApiResponse(responseCode = "200", description = "Operation successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    @ApiResponse(responseCode = "404", description = "Room not found")
     public List<MessageDto> get(
             @Parameter(description = "ID of the chat room", required = true)
             @RequestParam("room")
@@ -47,10 +53,15 @@ public class MessageController {
     @Operation(
             summary = "Create a new message"
     )
-    public void create(
+    @ApiResponse(responseCode = "200", description = "Operation successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    @ApiResponse(responseCode = "404", description = "Room not found")
+    public ResponseEntity<String> create(
             @RequestBody CreateMessageRequestDto request,
             @AuthenticationPrincipal CustomUserDetails user) {
         messageService.create(request.getRoomId(), request.getText(), user.getId());
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/page")
@@ -58,6 +69,10 @@ public class MessageController {
             summary = "Get messages in a chat room",
             description = "Returns  messages from the selected chat room. Paginated!"
     )
+    @ApiResponse(responseCode = "200", description = "Operation successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    @ApiResponse(responseCode = "404", description = "Room not found")
     public List<MessageDto> page(
             @Parameter(description = "ID of the chat room", required = true)
             @RequestParam("room")

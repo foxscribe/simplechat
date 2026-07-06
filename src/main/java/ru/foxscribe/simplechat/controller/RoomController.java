@@ -2,6 +2,7 @@ package ru.foxscribe.simplechat.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +32,10 @@ public class RoomController {
             summary = "Get members of the selected room",
             description = "Returns a list of users in the selected chat room."
     )
+    @ApiResponse(responseCode = "200", description = "Operation successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "403", description = "Insufficient permissions")
+    @ApiResponse(responseCode = "404", description = "Room not found")
     public List<UserDto> getUsers(
             @Parameter(description = "ID of the chat room", required = true)
             @RequestParam("roomid")
@@ -44,6 +49,9 @@ public class RoomController {
             summary = "Join a chat room",
             description = "Adds user into a chat room."
     )
+    @ApiResponse(responseCode = "200", description = "Operation successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "404", description = "Room not found")
     public void join(
             @Parameter(description = "ID of the chat room", required = true)
             @RequestParam("roomid")
@@ -57,6 +65,8 @@ public class RoomController {
             summary = "Create a chat room",
             description = "Creates an empty chat room. Doesn't add user to it automatically."
     )
+    @ApiResponse(responseCode = "200", description = "Operation successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
     public CreateRoomResponseDto create(
             @RequestBody CreateRoomRequestDto request) {
         return roomService.create(request.getName());

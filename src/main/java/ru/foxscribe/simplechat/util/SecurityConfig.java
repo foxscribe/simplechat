@@ -1,5 +1,10 @@
 package ru.foxscribe.simplechat.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,14 +20,21 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
+@AllArgsConstructor
 public class SecurityConfig {
 
-    private final List<String> ALLOWED_ORIGINS = List.of(
+    private static final List<String> ALLOWED_ORIGINS = List.of(
             "http://localhost:5173"
     );
+
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final ObjectMapper mapper;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
@@ -40,9 +52,22 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler(
-                                (req, res, auth) -> res.setStatus(200))
+                                (req, res, auth) ->
+                                        res.setStatus(200))
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler((request, response,
+                                              accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            var message = accessDeniedException.getMessage() != null
+                                    ? accessDeniedException.getMessage()
+                                    : "Insufficient permissions";
+                            response.getWriter().write(buildResponse(message, request));
+                        })
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -83,5 +108,22 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private String buildResponse(String message, HttpServletRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", Instant.now().toString());
+        body.put("status", 401);
+        body.put("error", "Unauthorized");
+        body.put("message", message);
+        body.put("path", request.getRequestURI());
+
+        try {
+            return this.mapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

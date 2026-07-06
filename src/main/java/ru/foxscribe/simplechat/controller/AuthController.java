@@ -33,11 +33,14 @@ public class AuthController {
             description = "Registers a new user. Doesn't create session automatically."
     )
     @ApiResponse(responseCode = "200", description = "User registered successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
     @ApiResponse(responseCode = "409", description = "Username already taken")
     public ResponseEntity<String> register(
-            @RequestBody RegisterRequest request) {
+            @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest) {
         authService.register(request);
-        return ResponseEntity.ok("");
+        authService.login(new LoginRequest(request.username(), request.password()), httpRequest);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
@@ -45,16 +48,21 @@ public class AuthController {
             summary = "Login user and create a session.",
             description = "The JSESSIONID cookie will be set in the response."
     )
+    @ApiResponse(responseCode = "200", description = "Login successful")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Wrong credentials")
     public ResponseEntity<String> login(@RequestBody LoginRequest request,
                                         HttpServletRequest httpRequest) {
         authService.login(request, httpRequest);
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
     @Operation(summary = "Check session validity")
+    @ApiResponse(responseCode = "200", description = "Session valid")
+    @ApiResponse(responseCode = "403", description = "Session invalid")
     public ResponseEntity<String> me(
             @AuthenticationPrincipal CustomUserDetails user) {
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok().build();
     }
 }

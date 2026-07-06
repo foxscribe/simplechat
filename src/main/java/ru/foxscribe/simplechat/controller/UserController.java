@@ -1,6 +1,7 @@
 package ru.foxscribe.simplechat.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +27,7 @@ public class UserController {
             summary = "Get current user's rooms",
             description = "Returns a list of rooms the current user is member of."
     )
+    @ApiResponse(responseCode = "200", description = "Operation successful")
     public Set<RoomDto> getRooms(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         return userService.getMyRooms(userDetails.getId());
@@ -36,6 +38,7 @@ public class UserController {
             summary = "Get current user's info",
             description = "Returns details of the currently authenticated user."
     )
+    @ApiResponse(responseCode = "200", description = "Operation successful")
     public UserDto me(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return userService.getMe(userDetails.getId());
     }
