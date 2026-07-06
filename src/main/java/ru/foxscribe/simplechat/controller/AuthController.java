@@ -28,7 +28,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    @Operation(summary = "Register a new user")
+    @Operation(
+            summary = "Register a new user",
+            description = "Registers a new user. Doesn't create session automatically."
+    )
     @ApiResponse(responseCode = "200", description = "User registered successfully")
     @ApiResponse(responseCode = "409", description = "Username already taken")
     public ResponseEntity<String> register(
